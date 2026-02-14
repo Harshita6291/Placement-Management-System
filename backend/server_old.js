@@ -2,16 +2,18 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const busboy = require('busboy');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.raw({ limit: '50mb' }));
 
+const busboy = require('busboy');
+app.use(express.raw({ limit: '50mb' }));
 // Connect to MongoDB (fallback to local URI)
+// strip surrounding quotes if .env value was quoted (dotenv keeps quotes)
 let mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/pms';
+// strip surrounding quotes if .env value was quoted
 mongoUri = typeof mongoUri === 'string' ? mongoUri.replace(/^['"]|['"]$/g, '') : mongoUri;
 mongoose.connect(mongoUri)
   .then(() => console.log('MongoDB connected'))
@@ -97,6 +99,7 @@ try {
       console.log(`Removed 'experience' from ${res.modifiedCount} TPO document(s)`);
     }
   } catch (e) {
+    // non-fatal - log and continue
     console.warn('TPO experience cleanup failed:', e && e.message ? e.message : e);
   }
 })();
@@ -264,36 +267,23 @@ app.post('/api/students/upload-resume', async (req, res) => {
     const email = req.headers['x-student-email'];
     if (!email) return res.status(400).json({ message: 'Email header is required' });
 
-    const bb = busboy({ headers: req.headers });
+    // Handle multipart file upload
+    const busboy = require('busboy')({ headers: req.headers });
     let fileBuffer = null;
     let fileName = '';
-    let fileReceived = false;
 
-    bb.on('file', (fieldname, file, info) => {
-      fileReceived = true;
+    busboy.on('file', (fieldname, file, info) => {
       const chunks = [];
-      
-      file.on('data', (data) => {
-        chunks.push(data);
-      });
-      
+      file.on('data', (data) => chunks.push(data));
       file.on('end', () => {
         fileBuffer = Buffer.concat(chunks);
         fileName = info.filename;
       });
-      
-      file.on('error', (err) => {
-        console.error('File stream error:', err);
-      });
     });
 
-    bb.on('close', async () => {
-      if (!fileReceived) {
-        return res.status(400).json({ message: 'No file received' });
-      }
-      
+    busboy.on('close', async () => {
       if (!fileBuffer || !fileName) {
-        return res.status(400).json({ message: 'File data not found' });
+        return res.status(400).json({ message: 'No file provided' });
       }
 
       // Validate file type
@@ -323,16 +313,12 @@ app.post('/api/students/upload-resume', async (req, res) => {
       return res.json({ message: 'Resume uploaded successfully', student: safe });
     });
 
-    bb.on('error', (err) => {
-      console.error('Busboy error:', err);
-      if (!res.headersSent) {
-        res.status(500).json({ message: 'File upload error', error: err.message });
-      }
+    busboy.on('error', (err) => {
+      return res.status(500).json({ message: 'File upload error', error: err.message });
     });
 
-    req.pipe(bb);
+    req.pipe(busboy);
   } catch (err) {
-    console.error('Upload endpoint error:', err);
     return res.status(500).json({ message: 'Upload error', error: err.message });
   }
 });

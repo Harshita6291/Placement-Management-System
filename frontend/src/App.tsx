@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import Profile from "./pages/dashboard/Profile";
 import ResumeSkillAnalysis from "./pages/dashboard/ResumeSkillAnalysis";
@@ -42,6 +44,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login/:role" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           
           {/* Student Dashboard Routes */}
           <Route path="/dashboard/student" element={<StudentDashboard />} />

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Phone, GraduationCap, Code, Save } from "lucide-react";
+import { User, Mail, Phone, GraduationCap, Code, Save, IdCard } from "lucide-react";
 import { useState, useEffect } from "react";
 import auth from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ const Profile = () => {
     name: "",
     email: "",
     phone: "",
+    studentId: "",
     branch: "",
   year: "",
     cgpa: "",
@@ -110,6 +111,17 @@ const Profile = () => {
                   id="phone"
                   value={profile.phone}
                   onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="studentId" className="flex items-center gap-2">
+                  <IdCard size={16} /> Student ID
+                </Label>
+                <Input
+                  id="studentId"
+                  value={profile.studentId}
+                  onChange={(e) => setProfile({ ...profile, studentId: e.target.value })}
+                  placeholder="e.g., STU-2024-001"
                 />
               </div>
               <div className="space-y-2">
